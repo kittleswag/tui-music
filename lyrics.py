@@ -4,7 +4,6 @@ import time
 
 CACHE = {}
 
-
 def fetch_lyrics(query):
     if query in CACHE:
         return CACHE[query]
@@ -12,22 +11,30 @@ def fetch_lyrics(query):
     url = "https://lrclib.net/api/search"
     params = {"q": query}
 
-    for _ in range(3):
-        try:
-            r = requests.get(url, params=params, timeout=5)
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        if r.status_code == 200:
             data = r.json()
-
+            
+            # Проверяем каждый результат
             for item in data:
-                if item.get("syncedLyrics"):
-                    CACHE[query] = item["syncedLyrics"]
-                    return item["syncedLyrics"]
-
-            return None
-        except:
-            time.sleep(1)
+                synced = item.get("syncedLyrics", "")
+                if synced and len(synced.strip()) > 50:
+                    print(f"Found synced lyrics for {query}")
+                    CACHE[query] = synced
+                    return synced
+            
+            # Если нет синхронизированных, пробуем обычные
+            for item in data:
+                plain = item.get("plainLyrics", "")
+                if plain and len(plain.strip()) > 50:
+                    print(f"Found plain lyrics for {query}")
+                    CACHE[query] = plain
+                    return plain
+    except Exception as e:
+        print(f"Error fetching lyrics: {e}")
 
     return None
-
 
 def parse_lrc(lrc_text):
     pattern = r"\[(\d+):(\d+\.\d+)\](.*)"
@@ -45,8 +52,13 @@ def parse_lrc(lrc_text):
         t = minutes * 60 + seconds
         lines.append((t, text))
 
+    if not lines:
+        # Если нет синхронизированных строк, разбиваем текст на строки
+        for i, line in enumerate(lrc_text.splitlines()):
+            if line.strip():
+                lines.append((i * 3.0, line.strip()))
+    
     return lines
-
 
 def expand_words(lines):
     words = []
