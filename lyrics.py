@@ -1,38 +1,60 @@
 import requests
 import re
 import time
+import unicodedata
 
 CACHE = {}
+
+def normalize(text):
+    # Убираем диакритику: é → e, ô → o
+    nfkd = unicodedata.normalize('NFKD', text)
+    return nfkd.encode('ASCII', 'ignore').decode('ASCII')
 
 def fetch_lyrics(query):
     if query in CACHE:
         return CACHE[query]
 
+    # Пробуем оригинальный запрос
+    result = _try_fetch(query)
+    if result:
+        CACHE[query] = result
+        return result
+
+    # Если не вышло — пробуем нормализовать
+    if ' - ' in query:
+        artist, title = query.split(' - ', 1)
+        artist_norm = normalize(artist)
+        title_norm = normalize(title)
+        
+        if artist_norm != artist or title_norm != title:
+            clean_query = f"{artist_norm} - {title_norm}"
+            result = _try_fetch(clean_query)
+            if result:
+                CACHE[query] = result
+                return result
+
+    return None
+
+def _try_fetch(query):
     url = "https://lrclib.net/api/search"
     params = {"q": query}
+    headers = {'User-Agent': 'Mozilla/5.0'}
 
     try:
-        r = requests.get(url, params=params, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            
-            # Проверяем каждый результат
-            for item in data:
-                synced = item.get("syncedLyrics", "")
-                if synced and len(synced.strip()) > 50:
-                    print(f"Found synced lyrics for {query}")
-                    CACHE[query] = synced
-                    return synced
-            
-            # Если нет синхронизированных, пробуем обычные
-            for item in data:
-                plain = item.get("plainLyrics", "")
-                if plain and len(plain.strip()) > 50:
-                    print(f"Found plain lyrics for {query}")
-                    CACHE[query] = plain
-                    return plain
-    except Exception as e:
-        print(f"Error fetching lyrics: {e}")
+        r = requests.get(url, params=params, headers=headers, timeout=10)
+        if r.status_code != 200:
+            return None
+
+        data = r.json()
+        for item in data:
+            synced = item.get('syncedLyrics', '')
+            if synced and len(synced.strip()) > 50:
+                return synced
+            plain = item.get('plainLyrics', '')
+            if plain and len(plain.strip()) > 50:
+                return plain
+    except:
+        pass
 
     return None
 
@@ -53,11 +75,10 @@ def parse_lrc(lrc_text):
         lines.append((t, text))
 
     if not lines:
-        # Если нет синхронизированных строк, разбиваем текст на строки
-        for i, line in enumerate(lrc_text.splitlines()):
-            if line.strip():
-                lines.append((i * 3.0, line.strip()))
-    
+        plain_lines = [l.strip() for l in lrc_text.splitlines() if l.strip()]
+        for i, line in enumerate(plain_lines):
+            lines.append((i * 3.0, line))
+
     return lines
 
 def expand_words(lines):

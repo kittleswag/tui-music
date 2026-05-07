@@ -18,7 +18,7 @@ def main():
     while True:
 
         if not is_running():
-            renderer.draw_message("Spotify is not running")
+            renderer.draw_word("Spotify is not running")
             time.sleep(1)
             continue
 
@@ -26,12 +26,12 @@ def main():
 
         if track != current_track:
             current_track = track
-            renderer.draw_message(f"Loading: {track}")
+            renderer.draw_word(f"Loading: {track}")
 
             lrc = fetch_lyrics(track)
 
             if not lrc:
-                renderer.draw_message("No synced lyrics found")
+                renderer.draw_word("No synced lyrics found")
                 words = []
                 index = 0
                 time.sleep(2)

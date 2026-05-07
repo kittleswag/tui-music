@@ -18,6 +18,9 @@ def load_theme():
     except:
         return {"primary": "#4a8cf7", "secondary": "#7aaff7", "text": "#e0e8f0"}
 
+def hex_to_rgb(hex_color):
+    return int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
+
 class Renderer:
     def __init__(self):
         self.current_word = ""
@@ -34,10 +37,15 @@ class Renderer:
     def clear(self):
         print("\033[2J")
 
-    def draw_word(self, word):
+    def draw_word(self, word, intensity=1.0):
         theme = load_theme()
         primary = theme["primary"]
-        r, g, b = int(primary[1:3], 16), int(primary[3:5], 16), int(primary[5:7], 16)
+        r, g, b = hex_to_rgb(primary)
+        
+        # Применяем интенсивность для затухания
+        r = int(r * intensity)
+        g = int(g * intensity)
+        b = int(b * intensity)
         
         cols, rows = self.size()
         now = time.time()
