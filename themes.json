@@ -1,0 +1,12 @@
+{
+  "subaru": {"primary": "#7fbf9f", "secondary": "#a8d5c2", "text": "#d7e3e7"},
+  "ram": {"primary": "#cc3333", "secondary": "#ff6666", "text": "#f0d7d7"},
+  "rem": {"primary": "#6a8aaa", "secondary": "#7a9aba", "text": "#e8edf5"},
+  "suwen": {"primary": "#7fd1d8", "secondary": "#a8e6df", "text": "#d7e3e7"},
+  "cozy": {"primary": "#d4a040", "secondary": "#e8c060", "text": "#e8d5c4"},
+  "night": {"primary": "#8caaee", "secondary": "#a6d1f0", "text": "#dce0e8"},
+  "genshin": {"primary": "#4a7ab5", "secondary": "#6a9aca", "text": "#e8edf5"},
+  "deepseek": {"primary": "#4a8cf7", "secondary": "#7aaff7", "text": "#e0e8f0"},
+  "pucci": {"primary": "#6a5acd", "secondary": "#8a5daa", "text": "#e0ddea"},
+  "ramrem": {"primary": "#cc3366", "secondary": "#66aaee", "text": "#f5e0e8"}
+}
